@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Do It</title>
+
+<style>
+body{
+  margin:0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+}
+
+.container{
+  max-width:500px;
+  margin:auto;
+  padding:20px;
+}
+
+.title{
+  text-align:center;
+  font-size:40px;
+  font-weight:bold;
+  color:#60a5fa;
+}
+
+.subtitle{
+  text-align:center;
+  opacity:0.7;
+  margin-bottom:20px;
+}
+
+.progress-box{
+  background:#1e293b;
+  padding:15px;
+  border-radius:15px;
+  margin-bottom:20px;
+}
+
+.progress-bar{
+  height:8px;
+  background:#334155;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:10px;
+}
+
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(to right,#22d3ee,#6366f1);
+  transition:0.4s;
+}
+
+.step-tags span{
+  background:#334155;
+  padding:5px 10px;
+  border-radius:20px;
+  margin:3px;
+  font-size:12px;
+  display:inline-block;
+}
+
+.chat{
+  margin-top:10px;
+}
+
+.message{
+  background:#1e293b;
+  padding:15px;
+  border-radius:15px;
+  margin-bottom:10px;
+}
+
+.user{
+  background:linear-gradient(135deg,#6366f1,#22d3ee);
+  text-align:right;
+}
+
+.options button{
+  width:100%;
+  margin:6px 0;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#334155;
+  color:white;
+  cursor:pointer;
+  transition:0.3s;
+}
+
+.options button:hover{
+  background:#6366f1;
+}
+
+.input-box{
+  display:flex;
+  margin-top:10px;
+}
+
+.input-box input{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#1e293b;
+  color:white;
+}
+
+.input-box button{
+  margin-left:5px;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#6366f1;
+  color:white;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="title">Do it</div>
+<div class="subtitle">We don’t generate faster. We generate better — because we understand first.</div>
+
+<div class="progress-box">
+  <div>🧠 Understanding you...</div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress"></div>
+  </div>
+  <div class="step-tags">
+    <span>Identity</span>
+    <span>Context</span>
+    <span>Goal</span>
+    <span>Position</span>
+    <span>Resources</span>
+    <span>Constraints</span>
+    <span>Friction</span>
+  </div>
+</div>
+
+<div class="chat" id="chat"></div>
+
+</div>
+
+<script>
+const steps = [
+  {
+    type:"options",
+    question:"🎓 What is your current education level?",
+    options:["Undergraduate","Postgraduate","Higher Secondary","Other"]
+  },
+  {
+    type:"options",
+    question:"🏫 Which board or university are you in?",
+    options:["CBSE","ICSE","State Board","IB","University","Other"]
+  },
+  {
+    type:"options",
+    question:"💻 What is your main subject or stream?",
+    options:["Science","Commerce","Engineering / CS","Arts","Medical"]
+  },
+  {
+    type:"input",
+    question:"🎯 What exactly do you want to achieve?"
+  },
+  {
+    type:"input",
+    question:"📍 What is your current position?"
+  },
+  {
+    type:"input",
+    question:"🛠 What resources do you have?"
+  },
+  {
+    type:"input",
+    question:"🚧 What are your constraints?"
+  },
+  {
+    type:"input",
+    question:"🔥 What friction stops you?"
+  }
+];
+
+let currentStep = 0;
+let answers = {};
+const chat = document.getElementById("chat");
+
+function addMessage(text,type="bot"){
+  const div=document.createElement("div");
+  div.className="message " + (type==="user"?"user":"");
+  div.innerText=text;
+  chat.appendChild(div);
+  chat.scrollTop=chat.scrollHeight;
+}
+
+function loadStep(){
+  if(currentStep>=steps.length){
+    showSummary();
+    return;
+  }
+
+  const step=steps[currentStep];
+  addMessage(step.question);
+
+  if(step.type==="options"){
+    const optionsDiv=document.createElement("div");
+    optionsDiv.className="options";
+
+    step.options.forEach(opt=>{
+      const btn=document.createElement("button");
+      btn.innerText=opt;
+      btn.onclick=()=>{
+        answers[step.question]=opt;
+        addMessage(opt,"user");
+        currentStep++;
+        updateProgress();
+        loadStep();
+      };
+      optionsDiv.appendChild(btn);
+    });
+
+    chat.appendChild(optionsDiv);
+  }else{
+    const inputDiv=document.createElement("div");
+    inputDiv.className="input-box";
+
+    const input=document.createElement("input");
+    input.placeholder="Type here...";
+
+    const send=document.createElement("button");
+    send.innerText="➤";
+
+    send.onclick=()=>{
+      if(input.value.trim()==="")return;
+      answers[step.question]=input.value;
+      addMessage(input.value,"user");
+      inputDiv.remove();
+      currentStep++;
+      updateProgress();
+      loadStep();
+    };
+
+    inputDiv.appendChild(input);
+    inputDiv.appendChild(send);
+    chat.appendChild(inputDiv);
+  }
+}
+
+function updateProgress(){
+  document.getElementById("progress").style.width =
+    (currentStep/steps.length)*100 + "%";
+}
+
+function showSummary(){
+  addMessage("✨ Here's what I understand:");
+  for(let key in answers){
+    addMessage(key + "\n" + answers[key]);
+  }
+}
+
+loadStep();
+</script>
+
+</body>
+</html>
